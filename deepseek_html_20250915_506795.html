@@ -1,22 +1,320 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Мой сайт</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор</title>
     <style>
-        /* Здесь будет CSS */
+        :root {
+            color-scheme: light;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial;
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: radial-gradient(circle at top, #f6f8ff 0%, #eef1f7 35%, #e6e9f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            color: #1f2933;
+        }
+
+        .calculator {
+            width: min(420px, 100%);
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(15, 23, 42, 0.15);
+            padding: 28px;
+            display: grid;
+            gap: 20px;
+        }
+
+        .calculator header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calculator h1 {
+            font-size: 22px;
+            margin: 0;
+        }
+
+        .mode {
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #e5edff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        .display {
+            background: #0f172a;
+            color: #f8fafc;
+            border-radius: 18px;
+            padding: 18px;
+            min-height: 96px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .display .expression {
+            font-size: 14px;
+            color: rgba(248, 250, 252, 0.7);
+            text-align: right;
+            min-height: 20px;
+        }
+
+        .display .result {
+            font-size: 32px;
+            text-align: right;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .keys {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        button {
+            border: none;
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        .key-number {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .key-operator {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .key-action {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .key-equals {
+            grid-column: span 2;
+            background: #1d4ed8;
+            color: #ffffff;
+        }
+
+        .key-zero {
+            grid-column: span 2;
+        }
+
+        .footer {
+            font-size: 12px;
+            color: #64748b;
             text-align: center;
-            background-color: #f0f0f0;
         }
     </style>
 </head>
 <body>
-    <h1>Привет, мир!</h1>
-    <p>Это мой первый сайт.</p>
+    <main class="calculator" aria-label="Калькулятор">
+        <header>
+            <h1>Калькулятор</h1>
+            <span class="mode">Стандартный</span>
+        </header>
+
+        <section class="display" aria-live="polite">
+            <div class="expression" id="expression">&nbsp;</div>
+            <div class="result" id="result">0</div>
+        </section>
+
+        <section class="keys" aria-label="Клавиши">
+            <button class="key-action" data-action="clear">AC</button>
+            <button class="key-action" data-action="delete">DEL</button>
+            <button class="key-operator" data-value="%">%</button>
+            <button class="key-operator" data-value="/">÷</button>
+
+            <button class="key-number" data-value="7">7</button>
+            <button class="key-number" data-value="8">8</button>
+            <button class="key-number" data-value="9">9</button>
+            <button class="key-operator" data-value="*">×</button>
+
+            <button class="key-number" data-value="4">4</button>
+            <button class="key-number" data-value="5">5</button>
+            <button class="key-number" data-value="6">6</button>
+            <button class="key-operator" data-value="-">−</button>
+
+            <button class="key-number" data-value="1">1</button>
+            <button class="key-number" data-value="2">2</button>
+            <button class="key-number" data-value="3">3</button>
+            <button class="key-operator" data-value="+">+</button>
+
+            <button class="key-number key-zero" data-value="0">0</button>
+            <button class="key-number" data-value=",">,</button>
+            <button class="key-equals" data-action="equals">=</button>
+        </section>
+
+        <div class="footer">Поддерживаются операции +, −, ×, ÷ и %.</div>
+    </main>
+
     <script>
-        // Здесь будет JavaScript
-        alert('Добро пожаловать!');
+        const expressionEl = document.getElementById("expression");
+        const resultEl = document.getElementById("result");
+        const keys = document.querySelector(".keys");
+
+        let expression = "";
+        let result = "0";
+
+        const updateDisplay = () => {
+            expressionEl.textContent = expression || "\u00A0";
+            resultEl.textContent = result;
+        };
+
+        const clearAll = () => {
+            expression = "";
+            result = "0";
+            updateDisplay();
+        };
+
+        const deleteLast = () => {
+            if (!expression) {
+                return;
+            }
+            expression = expression.slice(0, -1).trimEnd();
+            result = expression ? result : "0";
+            updateDisplay();
+        };
+
+        const sanitizeExpression = (expr) => expr.replace(/,/g, ".");
+
+        const calculate = () => {
+            if (!expression) {
+                return;
+            }
+            const sanitized = sanitizeExpression(expression);
+            const safeExpr = sanitized.replace(/[^0-9+\-*/%.()]/g, "");
+            try {
+                const computed = Function(`"use strict"; return (${safeExpr})`)();
+                if (Number.isFinite(computed)) {
+                    result = computed.toLocaleString("ru-RU", {
+                        maximumFractionDigits: 10,
+                    });
+                } else {
+                    result = "Ошибка";
+                }
+            } catch (error) {
+                result = "Ошибка";
+            }
+            updateDisplay();
+        };
+
+        const addValue = (value) => {
+            if (result === "Ошибка") {
+                result = "0";
+            }
+            if (value === ",") {
+                const parts = expression.split(/\s+[+\-*/%]\s+/);
+                const current = parts[parts.length - 1] || "";
+                if (current.includes(",")) {
+                    return;
+                }
+                if (current === "") {
+                    expression += "0";
+                }
+            }
+            expression += value;
+            updateDisplay();
+        };
+
+        const addOperator = (operator) => {
+            if (!expression && result !== "0" && result !== "Ошибка") {
+                expression = result.replace(/\s/g, "");
+            }
+            if (!expression) {
+                return;
+            }
+            if (/\s+[+\-*/%]\s+$/.test(expression)) {
+                expression = expression.replace(/\s+[+\-*/%]\s+$/, ` ${operator} `);
+            } else {
+                expression += ` ${operator} `;
+            }
+            updateDisplay();
+        };
+
+        keys.addEventListener("click", (event) => {
+            const button = event.target.closest("button");
+            if (!button) {
+                return;
+            }
+
+            const { action, value } = button.dataset;
+            if (action === "clear") {
+                clearAll();
+                return;
+            }
+            if (action === "delete") {
+                deleteLast();
+                return;
+            }
+            if (action === "equals") {
+                calculate();
+                return;
+            }
+            if (value) {
+                if (["+", "-", "*", "/", "%"].includes(value)) {
+                    addOperator(value);
+                } else {
+                    addValue(value);
+                }
+            }
+        });
+
+        document.addEventListener("keydown", (event) => {
+            const { key } = event;
+            if (key === "Enter") {
+                event.preventDefault();
+                calculate();
+                return;
+            }
+            if (key === "Backspace") {
+                deleteLast();
+                return;
+            }
+            if (key === "Escape") {
+                clearAll();
+                return;
+            }
+            if (/[0-9]/.test(key)) {
+                addValue(key);
+                return;
+            }
+            if (key === "," || key === ".") {
+                addValue(",");
+                return;
+            }
+            if (["+", "-", "*", "/", "%"].includes(key)) {
+                addOperator(key);
+            }
+        });
+
+        updateDisplay();
     </script>
 </body>
 </html>
